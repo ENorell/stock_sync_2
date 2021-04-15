@@ -54,6 +54,11 @@ proxy_list.head()
 proxy_list = proxy_list.dropna()
 proxy_list = proxy_list.convert_dtypes()
 
+def get_rand_proxy():
+    rows = proxy_list['IP Address']+ ':' + proxy_list['Port'].astype(str)
+    ip_address = random.choice(rows)
+    proxies = {'https': ip_address}#{ 'http': ip_address, 'https': ip_address }
+    return proxies
 
 # Define sync urls
 SYNC_URLS = ['http://www.nasdaqomxnordic.com/shares/listed-companies/stockholm',
@@ -64,6 +69,7 @@ data = []
 
 # start syncing stock lists
 try:
+    proxies = get_rand_proxy() # Use same proxy for all
     for sync_url in SYNC_URLS:
         print(sync_url)
         page = req.get(sync_url, 
@@ -142,7 +148,7 @@ except(req.ReadTimeout):
 
     data = pd.concat(data)
 
-engine = create_engine('postgresql+psycopg2://PG_USER:PG_PASSWORD@PG_IP:5432/STOCK_DB')
+engine = create_engine('postgresql+psycopg2://stock_scraper:tiger@localhost:5432/stock_data')
 
 # Put the header to the table?
 data.head(0).to_sql('ticker_list', engine, if_exists='replace',index=False) #truncates the table
